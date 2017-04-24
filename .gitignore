@@ -1,0 +1,5 @@
+api/
+config.py
+.idea/
+*.log
+*.log.*
