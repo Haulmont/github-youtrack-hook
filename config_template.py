@@ -14,6 +14,7 @@ DEFAULT_FIX_VERSIONS_REGEX = 'release_(\d+)_(\d+)'
 DEFAULT_YOUTRACK_URL = '<REQUIRED>'
 DEFAULT_YOUTRACK_USER = '<REQUIRED>'
 DEFAULT_YOUTRACK_PASS = '<REQUIRED>'
+ALLOWED_YOUTRACK_PROJECTS = {'<REQUIRED_GITHUB_FULL_NAME>':['<REQUIRED>','<REQUIRED>']} # key = ex. 'cuba-platform/cuba', value = list of comma separated projects
 
 COMMITTED_BRANCHES_FIELD = "Committed to"
 FIX_VERSIONS_FIELD = "Fix versions"

@@ -67,6 +67,16 @@ def process_push_event(data, conn):
 
     for issue in issue_map:
         project_id = issue[0:issue.rfind('-')]
+        full_name = data["repository"]["full_name"]
+
+        if full_name not in config.ALLOWED_YOUTRACK_PROJECTS:
+            logger.warning('Full name not allowed: "%s". Skipping issue mentioned in revisions %s.' % (project_id, issue_map[issue]))
+            continue
+
+        if project_id not in config.ALLOWED_YOUTRACK_PROJECTS[full_name]:
+            logger.warning('Project from committer\'s comment not allowed: "%s". Skipping issue mentioned in revisions %s.' % (project_id, issue_map[issue]))
+            continue
+
         issue_commits = issue_map[issue]
 
         commit_map = {}
