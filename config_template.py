@@ -1,13 +1,13 @@
-LOG_LEVEL = 'INFO'
+LOG_LEVEL = 'INFO' # CRITICAL, ERROR, WARNING, INFO, DEBUG (more output)
 LOG_FILE = 'github_youtrack_hook.log'
-LOG_ROTATE_PERIOD = 'h'
-LOG_ROTATE_INTERVAL = 24
-LOG_ROTATE_BACKUP_COUNT = 7
+LOG_ROTATE_PERIOD = 'h' # mignight, h, m
+LOG_ROTATE_INTERVAL = 24 # works with 'h', 'm'
+LOG_ROTATE_BACKUP_COUNT = 7 # backup files count
 
 WEBHOOK_ENDPOINT = '/postreceive'
 WEBHOOK_SECRET = '<REQUIRED>'
 
-LDAP_EMAIL_DOMAIN = '<REQUIRED>'
+LDAP_EMAIL_DOMAIN = '<REQUIRED>' # including '@': '@example.com'
 LDAP_LOGIN_INCLUDES_EMAIL = False
 
 DEFAULT_FIX_VERSIONS_REGEX = 'release_(\d+)_(\d+)'

@@ -3,7 +3,7 @@
 
 **Requires Python 2.7**
 
-GitHub receive hook is designed for updating YouTrack issues by push event.
+GitHub receive hook is designed for updating YouTrack issues by push event. Based on [Bloomberg's webhook](https://github.com/bloomberg/python-github-webhook).
 
 The hook constantly listens all local interfaces to receive push events from GitHub. Once the hook recieves a push event, it parses the event payload. The hook does two things:
 
@@ -12,13 +12,13 @@ The hook constantly listens all local interfaces to receive push events from Git
 
 ## Setup
 
-### Setting Up YouTrack
+#### Setting Up YouTrack
 
 First set up VCS integration in Youtrack. Follow the JetBrains [instruction](https://www.jetbrains.com/help/youtrack/standalone/7.0/GitHub-Integration.html) to do this.
 
 During posting the comment the webhook compares the email of GitHub committer with YouTrack user's email. As well as marking issues, the comment publishing performs by user found by email from commit. If email not found, the event performs from the system user. It is advised to provide developer grants to all the committers. The webhook does not publish duplicated comments.
 
-### Setting up GitHub hook
+#### Configure GitHub Webhook
 
 Go to your GitHub project settings
 
@@ -42,37 +42,46 @@ Pick "Just the push event" for events you would like to trigger this webhook.
 
 Next check if hook is active.
 
-## Install Python
+#### Install Python
 
 Install Python 2.7
 
-## Download the Webhook
+#### Download and Install Python Modules
+
+Download and install
+
+    git clone https://github.com/bloomberg/python-github-webhook
+    sudo apt install python-pip
+    pip install -U pip setuptools
+    sudo python setup.py install
+
+#### Download the Webhook
 
 Download the webhook
 
     https://git.haulmont.com/platform/github-youtrack-hook
 
-## Download YouTrack REST Python Library
+#### Download YouTrack REST Python Library
 
 Download the directory
 
-    https://github.com/JetBrains/youtrack-rest-python-library
+    https://github.com/JetBrains/youtrack-rest-python-library/tree/master/python
 
-to the webhook folder and rename the whole library folder to **api**.
+and place it to the webhook folder as **api** folder.
 
-## Prepare the Webhook
+#### Prepare the Webhook
 
-Rename **config_template.py** to **config.py**
+Copy **config_template.py** to **config.py**
 
 Replace all default fields **\<REQUIRED\>** to your settings.
 
 ## Usage
 
-Start python webhook:
+Start python webhook (grants required for port 80):
 
-    python github_youtrack_hook.py
+    sudo python github_youtrack_hook.py
 
-It should work on address
+It should work on address (defaults can be changed)
 
     http://<webhook_url>:80
 
