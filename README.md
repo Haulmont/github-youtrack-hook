@@ -44,7 +44,7 @@ Next check if hook is active.
 
 #### Install Python
 
-Install Python 2.7
+Install Python [2.7](https://www.python.org/download/releases/2.7.8/)
 
 #### Download and Install Python Modules
 

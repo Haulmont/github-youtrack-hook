@@ -47,8 +47,6 @@ def process_push_event(data, conn):
 
     commits = data["commits"]
 
-    committed_branches_field = config.COMMITTED_BRANCHES_FIELD
-    fix_versions_field = config.FIX_VERSIONS_FIELD
     fix_versions_regex = config.DEFAULT_FIX_VERSIONS_REGEX
 
     logger.debug('All commits: "%s"' % commits)
@@ -67,15 +65,30 @@ def process_push_event(data, conn):
 
     for issue in issue_map:
         project_id = issue[0:issue.rfind('-')]
-        full_name = data["repository"]["full_name"]
 
-        if full_name not in config.ALLOWED_YOUTRACK_PROJECTS:
-            logger.warning('Full name not allowed: "%s". Skipping issue mentioned in revisions %s.' % (project_id, issue_map[issue]))
+        if project_id not in config.YOUTRACK_PROJECTS:
+            logger.warning(
+                'Project from committer\'s comment not allowed: "%s". Skipping issue, mentioned in revisions %s.' % (
+                    project_id, issue_map[issue]))
             continue
 
-        if project_id not in config.ALLOWED_YOUTRACK_PROJECTS[full_name]:
-            logger.warning('Project from committer\'s comment not allowed: "%s". Skipping issue mentioned in revisions %s.' % (project_id, issue_map[issue]))
+        if git_repo_full_name not in config.YOUTRACK_PROJECTS[project_id]["GITHUB_PROJECTS"]:
+            logger.warning(
+                'Full name not allowed: "%s". Skipping issue, mentioned in revisions %s.' % (
+                    project_id, issue_map[issue]))
             continue
+
+        if not config.YOUTRACK_PROJECTS[project_id]["COMMITTED_TO"]:
+            committed_branches_field = None
+        else:
+            if config.YOUTRACK_PROJECTS[project_id]["COMMITTED_TO"] != []:
+                committed_branches_field = config.YOUTRACK_PROJECTS[project_id]["COMMITTED_TO"]
+
+        if not config.YOUTRACK_PROJECTS[project_id]["FIX_VERSIONS"]:
+            fix_versions_field = None
+        else:
+            if config.YOUTRACK_PROJECTS[project_id]["FIX_VERSIONS"] != []:
+                fix_versions_field = config.YOUTRACK_PROJECTS[project_id]["FIX_VERSIONS"]
 
         issue_commits = issue_map[issue]
 
@@ -106,7 +119,7 @@ def process_push_event(data, conn):
                     commit_sha1 = commit_info.revision[0:8]
                     commits_sha1_short.append(commit_sha1)
 
-                logger.warning('Issue Not Found: %s mentioned in commit %s. Skipping issue.' % (issue, ', '.join(commits_sha1_short)))
+                logger.warning('Issue Not Found: %s, mentioned in commit %s. Skipping issue.' % (issue, ', '.join(commits_sha1_short)))
             else:
                 raise
 
@@ -164,33 +177,53 @@ def post_push_info(issue, project_id, author_login, author_commits_list, conn, c
     for commit in author_commits_list:
         branches.add(commit.branch)
 
-    # add branch to Committed To, add fix versions
     for branch in branches:
         if committed_branches_field:
-            logger.info('Adding "Committed to" for [Issue: "%s" Field: "%s" Value: "%s"]' % (
-                issue,
-                committed_branches_field,
-                branch))
+            if common.yt_get_project_has_custom_field(conn, project_id, committed_branches_field):
+                logger.info('Adding "%s" custom field for issue: "%s", value: "%s"' % (
+                    committed_branches_field,
+                    issue,
+                    branch))
 
-            common.yt_add_value_to_issue_field(conn, issue, committed_branches_field, branch, run_as, logger)
+                common.yt_add_value_to_issue_field(conn, issue, committed_branches_field, branch, run_as, logger)
+            else:
+                logger.warning(
+                    '1 Field not found in YouTrack! Failed to set "%s" custom field for issue: "%s", value: "%s"' % (
+                        committed_branches_field,
+                        issue,
+                        branch))
 
-        if fix_versions_field and common.yt_get_project_has_custom_field(conn, project_id, fix_versions_field):
 
-            minor_version = common.find_minor_version(branch, fix_versions_regex)
+        if fix_versions_field:
+            if common.yt_get_project_has_custom_field(conn, project_id, fix_versions_field):
+                logger.info('Adding "%s" custom field for issue: "%s", value: "%s"' % (
+                    fix_versions_field,
+                    issue,
+                    branch))
+            else:
+                logger.warning(
+                    '2 Field not found in YouTrack! Failed to set "%s" custom field for issue: "%s", value: "%s"' % (
+                        fix_versions_field,
+                        issue,
+                        branch))
 
-            logger.debug('Minor version: %s' % minor_version)
+                minor_version = common.find_minor_version(branch, fix_versions_regex)
 
-            if minor_version or branch == 'master':
-                bundle_vals = common.yt_get_versions(conn, project_id)
+                logger.debug('Minor version: %s' % minor_version)
 
-                latest_version = common.find_latest_version(bundle_vals, minor_version)
 
-                logger.debug('Latest version: %s' % latest_version)
 
-                if latest_version:
-                    logger.info('Add fix version [Issue: "%s" Version: "%s"]' % (issue, latest_version))
+                if minor_version or branch == 'master':
+                    bundle_vals = common.yt_get_versions(conn, project_id)
 
-                    common.yt_add_value_to_issue_field(conn, issue, fix_versions_field, latest_version, run_as)
+                    latest_version = common.find_latest_version(bundle_vals, minor_version)
+
+                    logger.debug('Latest version: %s' % latest_version)
+
+                    if latest_version:
+                        logger.info('Add fix version [Issue: "%s" Version: "%s"]' % (issue, latest_version))
+
+                        common.yt_add_value_to_issue_field(conn, issue, fix_versions_field, latest_version, run_as)
 
 
 @web_hook.hook()
