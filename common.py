@@ -74,16 +74,22 @@ def yt_add_field_value(connection, issue, field, bundle, value, run_as_user=None
     yt_add_value_to_issue_field(connection, issue, field, value, run_as_user)
 
 
+def yt_get_field_bundle(connection, projectId, field, logger=None):
+    projectCustomField = connection.getProjectCustomField(projectId, field)
+
+    return projectCustomField["bundle"]
+
 def yt_add_value_to_bundle(connection, bundle, value, logger=None):
     if logger is not None:
         logger.info('Adding "%s" to "%s" bundle' % (value, bundle))
-        try:
-            connection.addValueToEnumBundle(bundle, value)
-        except YouTrackException, ex:
-            if re.match('.*Enum bundle value .* already exists\.', ex.message):
-                pass
-            else:
-                raise
+
+    try:
+        connection.addValueToEnumBundle(bundle, value)
+    except YouTrackException, ex:
+        if re.match('.*Enum bundle value .* already exists\.', ex.message):
+            pass
+        else:
+            raise
 
 
 def yt_add_value_to_issue_field(connection, issue, field, value, run_as_user=None, logger=None):

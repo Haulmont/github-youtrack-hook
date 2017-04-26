@@ -81,14 +81,12 @@ def process_push_event(data, conn):
         if not config.YOUTRACK_PROJECTS[project_id]["COMMITTED_TO"]:
             committed_branches_field = None
         else:
-            if config.YOUTRACK_PROJECTS[project_id]["COMMITTED_TO"] != []:
-                committed_branches_field = config.YOUTRACK_PROJECTS[project_id]["COMMITTED_TO"]
+            committed_branches_field = config.YOUTRACK_PROJECTS[project_id]["COMMITTED_TO"]
 
         if not config.YOUTRACK_PROJECTS[project_id]["FIX_VERSIONS"]:
             fix_versions_field = None
         else:
-            if config.YOUTRACK_PROJECTS[project_id]["FIX_VERSIONS"] != []:
-                fix_versions_field = config.YOUTRACK_PROJECTS[project_id]["FIX_VERSIONS"]
+            fix_versions_field = config.YOUTRACK_PROJECTS[project_id]["FIX_VERSIONS"]
 
         issue_commits = issue_map[issue]
 
@@ -122,7 +120,6 @@ def process_push_event(data, conn):
                 logger.warning('Issue Not Found: %s, mentioned in commit %s. Skipping issue.' % (issue, ', '.join(commits_sha1_short)))
             else:
                 raise
-
 
 
 def post_push_comment(issue, author_login, author_commits_list, conn, git_repo_fullname):
@@ -185,6 +182,16 @@ def post_push_info(issue, project_id, author_login, author_commits_list, conn, c
                     issue,
                     branch))
 
+                committed_field_bundle = common.yt_get_field_bundle(conn, project_id, committed_branches_field)
+
+                common.yt_add_field_value(
+                    conn,
+                    issue,
+                    committed_branches_field,
+                    committed_field_bundle,
+                    branch,
+                    run_as)
+
                 common.yt_add_value_to_issue_field(conn, issue, committed_branches_field, branch, run_as, logger)
             else:
                 logger.warning(
@@ -192,7 +199,6 @@ def post_push_info(issue, project_id, author_login, author_commits_list, conn, c
                         committed_branches_field,
                         issue,
                         branch))
-
 
         if fix_versions_field:
             if common.yt_get_project_has_custom_field(conn, project_id, fix_versions_field):
@@ -210,8 +216,6 @@ def post_push_info(issue, project_id, author_login, author_commits_list, conn, c
                 minor_version = common.find_minor_version(branch, fix_versions_regex)
 
                 logger.debug('Minor version: %s' % minor_version)
-
-
 
                 if minor_version or branch == 'master':
                     bundle_vals = common.yt_get_versions(conn, project_id)
