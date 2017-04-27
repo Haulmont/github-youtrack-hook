@@ -1,3 +1,8 @@
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
+import re
 import time
 
 import logging
@@ -182,52 +187,63 @@ def post_push_info(issue, project_id, author_login, author_commits_list, conn, c
                     issue,
                     branch))
 
-                committed_field_bundle = common.yt_get_field_bundle(conn, project_id, committed_branches_field)
+                matchedByAnyRegex = False
 
-                common.yt_add_field_value(
-                    conn,
-                    issue,
-                    committed_branches_field,
-                    committed_field_bundle,
-                    branch,
-                    run_as)
+                for regex in config.DEFAULT_GIT_RELEASE_BRANCH_MASKS:
+                    pattern = re.compile(regex)
 
-                common.yt_add_value_to_issue_field(conn, issue, committed_branches_field, branch, run_as, logger)
+                    if pattern.match(branch):
+                        matchedByAnyRegex = True
+                        logger.debug('Found branch matched to regexp "master" OR "release_x_y": %s.' % branch)
+                        committed_field_bundle = common.yt_get_field_bundle(conn, project_id, committed_branches_field)
+
+                        common.yt_add_field_value(
+                            conn,
+                            issue,
+                            committed_branches_field,
+                            committed_field_bundle,
+                            branch,
+                            run_as)
+
+                        common.yt_add_value_to_issue_field(conn, issue, committed_branches_field, branch, run_as,
+                                                           logger)
+
+                if not matchedByAnyRegex:
+                    logger.warning('Branch not matched to regexp "master" OR "release_x_y": %s. Branch skipped.' % branch)
+                    continue
+
             else:
                 logger.warning(
-                    '1 Field not found in YouTrack! Failed to set "%s" custom field for issue: "%s", value: "%s"' % (
+                    'Custom field not found in YouTrack! Failed to set "%s" for issue: "%s", value: "%s"' % (
                         committed_branches_field,
                         issue,
                         branch))
 
-        if fix_versions_field:
-            if common.yt_get_project_has_custom_field(conn, project_id, fix_versions_field):
-                logger.info('Adding "%s" custom field for issue: "%s", value: "%s"' % (
-                    fix_versions_field,
-                    issue,
-                    branch))
-            else:
-                logger.warning(
-                    '2 Field not found in YouTrack! Failed to set "%s" custom field for issue: "%s", value: "%s"' % (
-                        fix_versions_field,
-                        issue,
-                        branch))
+            if fix_versions_field:
+                if common.yt_get_project_has_custom_field(conn, project_id, fix_versions_field):
+                    logger.info('Adding "%s" custom field for issue: "%s"' % (fix_versions_field, issue))
+                else:
+                    logger.warning(
+                        'Field not found in YouTrack! Failed to set "%s" custom field for issue: "%s", value: "%s"' % (
+                            fix_versions_field,
+                            issue,
+                            branch))
 
-                minor_version = common.find_minor_version(branch, fix_versions_regex)
+                    minor_version = common.find_minor_version(branch, fix_versions_regex)
 
-                logger.debug('Minor version: %s' % minor_version)
+                    logger.debug('Minor version: %s' % minor_version)
 
-                if minor_version or branch == 'master':
-                    bundle_vals = common.yt_get_versions(conn, project_id)
+                    if minor_version or branch == 'master':
+                        bundle_vals = common.yt_get_versions(conn, project_id)
 
-                    latest_version = common.find_latest_version(bundle_vals, minor_version)
+                        latest_version = common.find_latest_version(bundle_vals, minor_version)
 
-                    logger.debug('Latest version: %s' % latest_version)
+                        logger.debug('Latest version: %s' % latest_version)
 
-                    if latest_version:
-                        logger.info('Add fix version [Issue: "%s" Version: "%s"]' % (issue, latest_version))
+                        if latest_version:
+                            logger.info('Add fix version [Issue: "%s" Version: "%s"]' % (issue, latest_version))
 
-                        common.yt_add_value_to_issue_field(conn, issue, fix_versions_field, latest_version, run_as)
+                            common.yt_add_value_to_issue_field(conn, issue, fix_versions_field, latest_version, run_as)
 
 
 @web_hook.hook()
