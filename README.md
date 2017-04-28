@@ -7,7 +7,7 @@ GitHub-YouTrack web hook is designed for updating YouTrack issues by push event.
 The hook constantly listens all local interfaces to receive push events from GitHub. Once the hook recieves a push event, it parses the event payload. The hook does two things:
 
  1. Publishes comments to corresponding issues groupping by the author with revision and branch information.
- 2. Automatically updates "Fix versions" and "Commited To" fields.
+ 2. Automatically updates "Fix versions" and "Commited to" fields.
 
 ## Setup
 
@@ -25,7 +25,7 @@ and find new webhook created by previous step. Edit the hook parameters:
 
 Payload URL should be as example:
 
-    http://<webhook_url>:<webhook_port>/postreceive
+    http://IP_ADDRESS:PORT/postreceive
 
 Content type:
 
@@ -33,11 +33,11 @@ Content type:
 
 Secret
 
-    Use the secret key generated in the previous step (OAuth Token)
+    Generate any secret key (token, passphrase etc)
 
 Pick "Just the push event" for events you would like to trigger this webhook.
 
-Next check if hook is active.
+Mark the hook is active.
 
 #### Install Python
 
@@ -72,6 +72,8 @@ Copy **config_template.py** to **config.py**
 
 Replace all default fields **\<REQUIRED\>** to your settings.
 
+Use token/passphrase generated previously.
+
 ## Usage
 
 Start python webhook (grants required for port 80):
@@ -80,7 +82,7 @@ Start python webhook (grants required for port 80):
 
 It should work on address (defaults can be changed)
 
-    http://<webhook_url>:80
+    http://IP_ADDRESS:PORT
 
 Send a push event, wait for a while until the process finishes. You should see some new comments in issues which were mentioned in commits pushed. Check a log file or console window for details.
 
