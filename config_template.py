@@ -1,3 +1,6 @@
+IP_ADDRESS = '0.0.0.0'
+PORT = '8080'
+
 LOG_LEVEL = 'INFO'  # CRITICAL, ERROR, WARNING, INFO, DEBUG (more output)
 LOG_FILE = 'github_youtrack_hook.log'
 LOG_ROTATE_PERIOD = 'h'  # midnight, h, m

@@ -257,20 +257,16 @@ def on_push(data):
 
     try:
         conn = Connection(config.DEFAULT_YOUTRACK_URL, config.DEFAULT_YOUTRACK_USER, config.DEFAULT_YOUTRACK_PASS)
-    except Exception, ex:
+    except Exception:
         logger.error("Unable to connect to YouTrack!")
-        logging.basicConfig(filename=config.LOG_FILE, level=logging.DEBUG)
-        logging.exception('Got exception on main handler')
         raise
 
     try:
         process_push_event(data, conn)
-    except Exception, ex:
-        logger.error("Exception during push event processing")
-        logging.basicConfig(filename=config.LOG_FILE, level=logging.DEBUG)
-        logging.exception('Got exception on main handler')
+    except Exception:
+        logger.exception("Exception during push event processing", exc_info=True)
         raise
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=80)
+    app.run(host=config.IP_ADDRESS, port=config.PORT)
