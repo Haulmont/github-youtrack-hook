@@ -1,20 +1,17 @@
-
-# GitHub YouTrack Receive Hook
+# GitHub YouTrack Web Hook
 
 **Requires Python 2.7**
 
-GitHub receive hook is designed for updating YouTrack issues by push event. Based on [Bloomberg's webhook](https://github.com/bloomberg/python-github-webhook).
+GitHub-YouTrack web hook is designed for updating YouTrack issues by push event. Based on [Bloomberg's webhook](https://github.com/bloomberg/python-github-webhook).
 
 The hook constantly listens all local interfaces to receive push events from GitHub. Once the hook recieves a push event, it parses the event payload. The hook does two things:
 
- 1. Publishes comments to corresponding issues groupping by the author.
- 2. Marking issues for release version
+ 1. Publishes comments to corresponding issues groupping by the author with revision and branch information.
+ 2. Automatically updates "Fix versions" and "Commited To" fields.
 
 ## Setup
 
 #### Setting Up YouTrack
-
-First set up VCS integration in Youtrack. Follow the JetBrains [instruction](https://www.jetbrains.com/help/youtrack/standalone/7.0/GitHub-Integration.html) to do this.
 
 During posting the comment the webhook compares the email of GitHub committer with YouTrack user's email. As well as marking issues, the comment publishing performs by user found by email from commit. If email not found, the event performs from the system user. It is advised to provide developer grants to all the committers. The webhook does not publish duplicated comments.
 
