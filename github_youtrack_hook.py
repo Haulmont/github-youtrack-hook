@@ -85,15 +85,21 @@ def process_push_event(data, conn):
                     project_id, issue_map[issue]))
             continue
 
-        if not config.YOUTRACK_PROJECTS[project_id]["COMMITTED_TO"]:
+        if "COMMITTED_TO" in config.YOUTRACK_PROJECTS[project_id]:
+            if not config.YOUTRACK_PROJECTS[project_id]["COMMITTED_TO"]:
+                committed_branches_field = None
+            else:
+                committed_branches_field = config.YOUTRACK_PROJECTS[project_id]["COMMITTED_TO"]
+        else:
             committed_branches_field = None
-        else:
-            committed_branches_field = config.YOUTRACK_PROJECTS[project_id]["COMMITTED_TO"]
 
-        if not config.YOUTRACK_PROJECTS[project_id]["FIX_VERSIONS"]:
-            fix_versions_field = None
+        if "FIX_VERSIONS" in config.YOUTRACK_PROJECTS[project_id]:
+            if not config.YOUTRACK_PROJECTS[project_id]["FIX_VERSIONS"]:
+                fix_versions_field = None
+            else:
+                fix_versions_field = config.YOUTRACK_PROJECTS[project_id]["FIX_VERSIONS"]
         else:
-            fix_versions_field = config.YOUTRACK_PROJECTS[project_id]["FIX_VERSIONS"]
+            fix_versions_field = None
 
         issue_commits = issue_map[issue]
 
@@ -124,7 +130,8 @@ def process_push_event(data, conn):
                     commit_sha1 = commit_info.revision[0:8]
                     commits_sha1_short.append(commit_sha1)
 
-                logger.warning('Issue Not Found: %s, mentioned in commit %s. Skipping issue.' % (issue, ', '.join(commits_sha1_short)))
+                logger.warning('Issue Not Found: %s, mentioned in commit %s. Skipping issue.' % (
+                issue, ', '.join(commits_sha1_short)))
             else:
                 raise
 
@@ -184,7 +191,7 @@ def post_push_info(issue, project_id, author_login, author_commits_list, conn, c
     for branch in branches:
         if committed_branches_field:
             if common.yt_get_project_has_custom_field(conn, project_id, committed_branches_field):
-                logger.info('Adding "%s" custom field for issue: "%s", value: "%s"' % (
+                logger.info('Adding "%s" for issue: "%s", value: "%s"' % (
                     committed_branches_field,
                     issue,
                     branch))
@@ -207,32 +214,22 @@ def post_push_info(issue, project_id, author_login, author_commits_list, conn, c
                             branch,
                             run_as)
 
-                        common.yt_add_value_to_issue_field(conn, issue, committed_branches_field, branch, run_as,
-                                                           logger)
-
                 if not matchedByAnyRegex:
                     logger.warning('Branch not matched to regexp "master" OR "release_x_y": %s. Branch skipped.' % branch)
                     continue
 
             else:
                 logger.warning(
-                    'Custom field not found in YouTrack! Failed to set "%s" for issue: "%s", value: "%s"' % (
+                    'not found in YouTrack! Failed to set "%s" for issue: "%s", value: "%s"' % (
                         committed_branches_field,
                         issue,
                         branch))
 
             if fix_versions_field:
                 if common.yt_get_project_has_custom_field(conn, project_id, fix_versions_field):
-                    logger.info('Adding "%s" custom field for issue: "%s"' % (fix_versions_field, issue))
-                else:
-                    logger.warning(
-                        'Field not found in YouTrack! Failed to set "%s" custom field for issue: "%s", value: "%s"' % (
-                            fix_versions_field,
-                            issue,
-                            branch))
+                    logger.info('Adding "%s" for issue: "%s"' % (fix_versions_field, issue))
 
                     minor_version = common.find_minor_version(branch, fix_versions_regex)
-
                     logger.debug('Minor version: %s' % minor_version)
 
                     if minor_version or branch == 'master':
@@ -246,6 +243,12 @@ def post_push_info(issue, project_id, author_login, author_commits_list, conn, c
                             logger.info('Add fix version [Issue: "%s" Version: "%s"]' % (issue, latest_version))
 
                             common.yt_add_value_to_issue_field(conn, issue, fix_versions_field, latest_version, run_as)
+                else:
+                    logger.warning(
+                        'Version not found in YouTrack! Failed to set "%s" for issue: "%s", value: "%s"' % (
+                            fix_versions_field,
+                            issue,
+                            branch))
 
 
 @web_hook.hook()

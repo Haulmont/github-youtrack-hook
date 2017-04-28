@@ -22,8 +22,8 @@ DEFAULT_YOUTRACK_PASS = '<REQUIRED>'
 
 YOUTRACK_PROJECTS = {
     "<REQUIRED>": {  # allowed YouTrack PROJECT-1
-        "COMMITTED_TO": "Committed to",  # YouTrack custom field-1
-        "FIX_VERSIONS": "Fix versions",  # YouTrack custom field-2
+        "COMMITTED_TO": "Committed to",  # YouTrack custom field-1, optional
+        "FIX_VERSIONS": "Fix versions",  # YouTrack custom field-2, optional
         "GITHUB_PROJECTS": ["<REQUIRED_GITHUB_FULL_NAME>"]  # ex. "cuba-platform/cuba"
     },
     "<REQUIRED>": {  # allowed YouTrack PROJECT-n
