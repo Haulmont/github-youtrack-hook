@@ -1,5 +1,4 @@
-__author__ = 'artamonov'
-
+# -*- coding: utf-8 -*-
 
 class CommitInfo:
     def __init__(self, author, revision, branch, comment, issue):
