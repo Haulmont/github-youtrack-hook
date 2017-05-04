@@ -48,13 +48,24 @@ logger.info("Program started.")
 
 
 def process_push_event(data, conn):
-
     branch = data["ref"].replace('refs/heads/', '')
+
+    is_release_branch = False
+
+    for regex in config.DEFAULT_GIT_RELEASE_BRANCH_MASKS:
+        pattern = re.compile(regex)
+
+        if pattern.match(branch):
+            is_release_branch = True
+            break
+
+    if is_release_branch == False:
+        logger.info('Found commit to non-release branch "%s" of "%s" by user %s. Ignoring push event.' % (branch, data["repository"]["full_name"], data["pusher"]["email"]))
+        return
+
     git_repo_full_name = data["repository"]["full_name"]
 
     commits = data["commits"]
-
-    fix_versions_regex = config.DEFAULT_FIX_VERSIONS_REGEX
 
     logger.debug('All commits: "%s"' % commits)
 
@@ -120,7 +131,7 @@ def process_push_event(data, conn):
 
                 post_push_comment(issue, author, commit_map[author], conn, git_repo_full_name)
                 post_push_info(issue, project_id, author, commit_map[author], conn, committed_branches_field,
-                               fix_versions_field, fix_versions_regex)
+                               fix_versions_field, config.DEFAULT_FIX_VERSIONS_REGEX)
 
         except Exception, ex:
             if '404: Not Found: Issue not found' in ex.message:
@@ -138,7 +149,11 @@ def process_push_event(data, conn):
 
 def post_push_comment(issue, author_login, author_commits_list, conn, git_repo_fullname):
 
-    issue_comment = "Git changesets by +%s+ in *%s*:\n" % (author_login, git_repo_fullname)
+    author_nick = author_login
+    if author_login.find(config.LDAP_EMAIL_DOMAIN) >= 0:
+        author_nick = author_login.replace(config.LDAP_EMAIL_DOMAIN, '')
+
+    issue_comment = "Git changesets by +%s+ in *%s*:\n" % (author_nick, git_repo_fullname)
 
     for commit in author_commits_list:
         changeset_link = config.DEFAULT_GITHUB_URL % (git_repo_fullname, commit.revision)
@@ -196,27 +211,15 @@ def post_push_info(issue, project_id, author_login, author_commits_list, conn, c
                     issue,
                     branch))
 
-                matchedByAnyRegex = False
+                committed_field_bundle = common.yt_get_field_bundle(conn, project_id, committed_branches_field)
 
-                for regex in config.DEFAULT_GIT_RELEASE_BRANCH_MASKS:
-                    pattern = re.compile(regex)
-
-                    if pattern.match(branch):
-                        matchedByAnyRegex = True
-                        logger.debug('Found branch matched to regexp "master" OR "release_x_y": %s.' % branch)
-                        committed_field_bundle = common.yt_get_field_bundle(conn, project_id, committed_branches_field)
-
-                        common.yt_add_field_value(
-                            conn,
-                            issue,
-                            committed_branches_field,
-                            committed_field_bundle,
-                            branch,
-                            run_as)
-
-                if not matchedByAnyRegex:
-                    logger.warning('Branch not matched to regexp "master" OR "release_x_y": %s. Branch skipped.' % branch)
-                    continue
+                common.yt_add_field_value(
+                    conn,
+                    issue,
+                    committed_branches_field,
+                    committed_field_bundle,
+                    branch,
+                    run_as)
 
             else:
                 logger.warning(
