@@ -148,12 +148,12 @@ def process_push_event(data, conn):
 
 
 def post_push_comment(issue, author_login, author_commits_list, conn, git_repo_fullname):
-
-    author_nick = author_login
     if author_login.find(config.LDAP_EMAIL_DOMAIN) >= 0:
         author_nick = author_login.replace(config.LDAP_EMAIL_DOMAIN, '')
-
-    issue_comment = "Git changesets by +%s+ in *%s*:\n" % (author_nick, git_repo_fullname)
+        issue_comment = "Git changesets by +%s+ in *%s*:\n" % (author_nick, git_repo_fullname)
+    else:
+        author_nick = author_login.split('@', 1)[0]
+        issue_comment = "Git changesets by external contributor +%s+ in *%s*:\n" % (author_nick, git_repo_fullname)
 
     for commit in author_commits_list:
         changeset_link = config.DEFAULT_GITHUB_URL % (git_repo_fullname, commit.revision)
